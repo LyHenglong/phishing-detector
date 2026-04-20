@@ -1,0 +1,71 @@
+{
+  "version": "v1",
+  "best_model": "Gradient Boosting",
+  "feature_cols": [
+    "url_length",
+    "domain_length",
+    "path_length",
+    "query_length",
+    "num_dots",
+    "num_hyphens",
+    "num_underscores",
+    "num_slashes",
+    "num_at_symbols",
+    "num_ampersands",
+    "num_equals_signs",
+    "num_question_marks",
+    "num_special_chars",
+    "num_digits",
+    "digit_ratio",
+    "has_https",
+    "has_ip_address",
+    "num_subdomains",
+    "domain_entropy",
+    "has_suspicious_keyword",
+    "num_suspicious_keywords",
+    "has_suspicious_tld",
+    "has_phishing_extension",
+    "path_depth",
+    "has_port",
+    "url_entropy",
+    "token_count",
+    "longest_token_length",
+    "has_double_slash_redirect",
+    "has_hex_encoding"
+  ],
+  "raw_dataset": "phishing_dataset_v1.csv",
+  "feature_dataset": "phishing_dataset_v1_features.csv",
+  "n_train": 76729,
+  "n_val": 16442,
+  "n_test": 16443,
+  "test_metrics": {
+    "accuracy": 0.9643,
+    "precision": 0.9764,
+    "recall": 0.9516,
+    "f1": 0.9638,
+    "roc_auc": 0.9934
+  },
+  "all_models": {
+    "Logistic Regression": {
+      "accuracy": 0.8568,
+      "precision": 0.8685,
+      "recall": 0.841,
+      "f1": 0.8545,
+      "roc_auc": 0.9335
+    },
+    "Random Forest": {
+      "accuracy": 0.9624,
+      "precision": 0.9768,
+      "recall": 0.9473,
+      "f1": 0.9618,
+      "roc_auc": 0.9931
+    },
+    "Gradient Boosting": {
+      "accuracy": 0.9643,
+      "precision": 0.9764,
+      "recall": 0.9516,
+      "f1": 0.9638,
+      "roc_auc": 0.9934
+    }
+  }
+}
