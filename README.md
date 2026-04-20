@@ -263,4 +263,5 @@ This tool analyzes URL structure only — it does not fetch, render, or visit an
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+©️Copyright2026 || Henglong LY
+
