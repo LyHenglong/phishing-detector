@@ -19,7 +19,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from feature_extraction import extract_features, FEATURE_COLUMNS
+from feature_extraction import extract_features, extract_domain, FEATURE_COLUMNS
 
 DEFAULT_INPUT  = ROOT / "data" / "phishing_dataset_v1.csv"
 DEFAULT_OUTPUT = ROOT / "data" / "phishing_dataset_v1_features.csv"
@@ -80,6 +80,7 @@ def build_features(
     for i, (url, label) in enumerate(zip(urls, labels)):
         try:
             feats = extract_features(str(url))
+            feats["domain"] = extract_domain(str(url))
             feats["label"] = int(label)
             records.append(feats)
         except Exception as e:
@@ -90,7 +91,7 @@ def build_features(
             print(f"  ... {i+1:,}/{total:,} URLs processed")
 
     df = pd.DataFrame(records)
-    df = df[FEATURE_COLUMNS + ["label"]]
+    df = df[FEATURE_COLUMNS + ["domain", "label"]]
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(output_path, index=False)
@@ -98,7 +99,7 @@ def build_features(
     if verbose:
         print(f"\n✅ Feature dataset saved → {output_path}")
         print(f"   Rows    : {len(df):,}")
-        print(f"   Columns : {len(df.columns)} (30 features + label)")
+        print(f"   Columns : {len(df.columns)} (30 features + domain + label)")
         if errors:
             print(f"   Skipped : {errors} URLs (parse errors)")
 

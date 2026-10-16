@@ -35,37 +35,43 @@
   ],
   "raw_dataset": "phishing_dataset_v1.csv",
   "feature_dataset": "phishing_dataset_v1_features.csv",
-  "n_train": 76729,
-  "n_val": 16442,
-  "n_test": 16443,
+  "split_strategy": "grouped_by_domain",
+  "n_domains": 57904,
+  "n_train": 81839,
+  "n_val": 13145,
+  "n_test": 14630,
   "test_metrics": {
-    "accuracy": 0.9643,
-    "precision": 0.9764,
-    "recall": 0.9516,
-    "f1": 0.9638,
-    "roc_auc": 0.9934
+    "accuracy": 0.95,
+    "precision": 0.9587,
+    "recall": 0.9217,
+    "f1": 0.9398,
+    "roc_auc": 0.9827
   },
   "all_models": {
     "Logistic Regression": {
-      "accuracy": 0.8568,
-      "precision": 0.8685,
-      "recall": 0.841,
-      "f1": 0.8545,
-      "roc_auc": 0.9335
+      "accuracy": 0.8632,
+      "precision": 0.8465,
+      "recall": 0.8266,
+      "f1": 0.8364,
+      "roc_auc": 0.9278
     },
     "Random Forest": {
-      "accuracy": 0.9624,
-      "precision": 0.9768,
-      "recall": 0.9473,
-      "f1": 0.9618,
-      "roc_auc": 0.9931
+      "accuracy": 0.9282,
+      "precision": 0.9127,
+      "recall": 0.9181,
+      "f1": 0.9154,
+      "roc_auc": 0.9762
     },
     "Gradient Boosting": {
-      "accuracy": 0.9643,
-      "precision": 0.9764,
-      "recall": 0.9516,
-      "f1": 0.9638,
-      "roc_auc": 0.9934
+      "accuracy": 0.95,
+      "precision": 0.9587,
+      "recall": 0.9217,
+      "f1": 0.9398,
+      "roc_auc": 0.9827
     }
+  },
+  "evaluation": {
+    "roc_auc": 0.9827,
+    "avg_precision": 0.9824
   }
 }

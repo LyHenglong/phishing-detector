@@ -11,6 +11,7 @@ Full training pipeline:
   7. Save best model, scaler, metadata, and plots to models/
 """
 
+import sys
 import json
 import time
 import argparse
@@ -23,7 +24,6 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing   import StandardScaler
 from sklearn.linear_model    import LogisticRegression
 from sklearn.ensemble        import RandomForestClassifier, GradientBoostingClassifier
@@ -45,7 +45,11 @@ try:
 except ImportError:
     HAS_LGB = False
 
-ROOT       = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+from feature_extraction import FEATURE_COLUMNS
+from data_split          import grouped_train_val_test_split
+
 RAW_DATA   = ROOT / "data" / "phishing_dataset_v1.csv"
 FEAT_DATA  = ROOT / "data" / "phishing_dataset_v1_features.csv"
 MODEL_DIR  = ROOT / "models"
@@ -151,18 +155,30 @@ def train(
 
     print("\n── Step 2: Load features ────────────────────────────────────")
     df = pd.read_csv(feat_path)
-    feature_cols = [c for c in df.columns if c != "label"]
-    X = df[feature_cols].values
-    y = df["label"].values
+    if "domain" not in df.columns:
+        raise ValueError(
+            f"'{feat_path.name}' has no 'domain' column (built with an older "
+            f"version of build_features.py). Delete it and rerun so it is "
+            f"regenerated with per-row domains needed for leakage-safe splitting."
+        )
+    feature_cols = FEATURE_COLUMNS
+    X      = df[feature_cols].values
+    y      = df["label"].values
+    groups = df["domain"].values
     print(f"  {len(df):,} rows  |  {len(feature_cols)} features  |  "
-          f"phishing={y.sum():,}  legitimate={(y==0).sum():,}")
+          f"phishing={y.sum():,}  legitimate={(y==0).sum():,}  |  "
+          f"{len(set(groups)):,} unique domains")
 
-    print("\n── Step 3: Train / Val / Test split ─────────────────────────")
-    X_tmp,  X_test,  y_tmp,  y_test  = train_test_split(
-        X, y, test_size=0.15, stratify=y, random_state=42)
-    X_train, X_val,  y_train, y_val  = train_test_split(
-        X_tmp, y_tmp, test_size=0.15/0.85, stratify=y_tmp, random_state=42)
-    print(f"  Train={len(X_train):,}  Val={len(X_val):,}  Test={len(X_test):,}")
+    print("\n── Step 3: Train / Val / Test split (grouped by domain) ─────")
+    train_idx, val_idx, test_idx = grouped_train_val_test_split(
+        X, y, groups, test_size=0.15, val_size=0.15 / 0.85, random_state=42)
+    X_train, y_train = X[train_idx], y[train_idx]
+    X_val,   y_val   = X[val_idx],   y[val_idx]
+    X_test,  y_test  = X[test_idx],  y[test_idx]
+    print(f"  Train={len(X_train):,}  Val={len(X_val):,}  Test={len(X_test):,}  "
+          f"(no domain shared across splits)")
+    print(f"  Phishing ratio — train={y_train.mean():.3f}  "
+          f"val={y_val.mean():.3f}  test={y_test.mean():.3f}")
 
     print("\n── Step 4: Scale ────────────────────────────────────────────")
     scaler  = StandardScaler()
@@ -233,6 +249,8 @@ def train(
         "feature_cols":    feature_cols,
         "raw_dataset":     str(raw_path.name),
         "feature_dataset": str(feat_path.name),
+        "split_strategy":  "grouped_by_domain",
+        "n_domains":       int(len(set(groups))),
         "n_train":         int(len(X_train)),
         "n_val":           int(len(X_val)),
         "n_test":          int(len(X_test)),

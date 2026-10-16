@@ -19,7 +19,7 @@ using 30 hand-crafted structural features extracted directly from raw URLs.
 
 This project trains a phishing URL classifier on **109,614 real labeled URLs** (balanced: 54,807 phishing / 54,807 legitimate). The pipeline covers everything from raw data ingestion, automated feature extraction, multi-model training, and evaluation, to a REST API and an interactive web interface.
 
-> **Best model:** Gradient Boosting — **F1: 0.9638 · AUC: 0.9934**
+> **Best model:** Gradient Boosting — **F1: 0.9398 · AUC: 0.9827** (held out by domain — see note below)
 
 ---
 
@@ -29,9 +29,10 @@ This project trains a phishing URL classifier on **109,614 real labeled URLs** (
 phishing_detector_v1/
 ├── data/
 │   ├── phishing_dataset_v1.csv              # Raw dataset: [url, status]
-│   └── phishing_dataset_v1_features.csv     # Auto-generated: 30 features + label
+│   └── phishing_dataset_v1_features.csv     # Auto-generated: 30 features + domain + label
 ├── src/
 │   ├── feature_extraction.py                # 30-feature extractor
+│   ├── data_split.py                        # Leakage-safe train/val/test split (grouped by domain)
 │   ├── train_model.py                       # Full pipeline: extract → train → evaluate
 │   ├── evaluate.py                          # Standalone evaluation report
 │   └── predict.py                           # Real-time prediction (CLI + importable)
@@ -118,17 +119,19 @@ Trained on **109,614 real URLs** — 10× larger than v0, with a significant acc
 
 | Model | Accuracy | Precision | Recall | F1 | AUC-ROC |
 |---|---|---|---|---|---|
-| Logistic Regression | 0.8568 | 0.8685 | 0.8410 | 0.8545 | 0.9335 |
-| Random Forest | 0.9624 | 0.9768 | 0.9473 | 0.9618 | 0.9931 |
-| **Gradient Boosting** ✅ | **0.9643** | **0.9764** | **0.9516** | **0.9638** | **0.9934** |
+| Logistic Regression | 0.8632 | 0.8465 | 0.8266 | 0.8364 | 0.9278 |
+| Random Forest | 0.9282 | 0.9127 | 0.9181 | 0.9154 | 0.9762 |
+| **Gradient Boosting** ✅ | **0.9500** | **0.9587** | **0.9217** | **0.9398** | **0.9827** |
 
-**v1 vs v0 comparison:**
-
-| Metric | v0 (11k URLs) | v1 (109k URLs) | Δ |
-|---|---|---|---|
-| F1 | 0.8878 | 0.9638 | +0.0760 |
-| AUC | 0.9540 | 0.9934 | +0.0394 |
-| Accuracy | 0.8892 | 0.9643 | +0.0751 |
+> **Note on evaluation methodology:** many rows share a domain — the same abused
+> site (free-hosting/IPFS gateways, Google Docs links, etc.) hosts several
+> phishing paths. Splitting train/val/test **by row** lets the same domain leak
+> into both sides, letting the model partly memorize domains instead of
+> learning transferable URL patterns — that's what produced the earlier,
+> inflated `F1 0.9638 / AUC 0.9934`. The pipeline now splits **by domain**
+> (`src/data_split.py`), stratified so no domain appears in more than one
+> split. The numbers above reflect genuine generalization to domains never
+> seen during training.
 
 ---
 

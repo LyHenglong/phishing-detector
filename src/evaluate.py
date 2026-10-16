@@ -10,6 +10,7 @@ Usage:
     python src/evaluate.py --data data/phishing_dataset.csv --models models/
 """
 
+import sys
 import json
 import argparse
 from pathlib import Path
@@ -22,14 +23,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import joblib
 
-from sklearn.model_selection import train_test_split
 from sklearn.metrics         import (
     classification_report, confusion_matrix,
     roc_auc_score, roc_curve, precision_recall_curve, average_precision_score,
 )
 
-ROOT   = Path(__file__).resolve().parents[1]
-DATA   = ROOT / "data"   / "phishing_dataset.csv"
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+from data_split import grouped_train_val_test_split
+
+DATA   = ROOT / "data"   / "phishing_dataset_v1_features.csv"
 MODELS = ROOT / "models"
 
 
@@ -51,11 +54,15 @@ def evaluate(data_path: Path = DATA, model_dir: Path = MODELS):
     feature_cols = meta["feature_cols"]
     model_name   = meta["best_model"]
 
-    # ── Load & split (reproduce same split) ──────────────────────────────
+    # ── Load & split (reproduce the exact same grouped-by-domain test set
+    #    that train_model.py held out) ──────────────────────────────────
     df = pd.read_csv(data_path)
-    X  = df[feature_cols].values
-    y  = df["label"].values
-    _, X_test, _, y_test = train_test_split(X, y, test_size=0.15, stratify=y, random_state=42)
+    X      = df[feature_cols].values
+    y      = df["label"].values
+    groups = df["domain"].values
+    _, _, test_idx = grouped_train_val_test_split(
+        X, y, groups, test_size=0.15, val_size=0.15 / 0.85, random_state=42)
+    X_test, y_test = X[test_idx], y[test_idx]
     X_test = scaler.transform(X_test)
 
     y_pred = clf.predict(X_test)
