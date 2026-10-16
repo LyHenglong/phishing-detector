@@ -78,6 +78,19 @@ def _tokenize(url: str):
     return re.findall(r"[a-zA-Z0-9]+", url)
 
 
+def extract_domain(url: str) -> str:
+    """
+    Return the hostname of a URL (scheme optional).
+    Used to group same-site URLs together for leakage-safe train/test splitting —
+    many rows in real phishing datasets are multiple paths on one abused domain
+    (e.g. free-hosting / IPFS gateways), so splitting by row instead of by domain
+    lets the model see the same domain in both train and test.
+    """
+    if not url.startswith(("http://", "https://")):
+        url = "http://" + url
+    return urlparse(url).hostname or ""
+
+
 # ---------------------------------------------------------------------------
 # Main extractor
 # ---------------------------------------------------------------------------
